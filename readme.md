@@ -74,3 +74,9 @@ Longest transaction:        55100.00 ms
 Shortest transaction:       55090.00 ms
 ```
 📌 **Summary**: Interested behavior, the *Response time* is almost the same as the `long_query_time = 10.0` setting.
+
+Example logs entry in Kibana:
+![Kibana Log Example](images/kibana.png)
+
+Example logs entry in Graylog:
+![Graylog Log Example](images/graylog.png)

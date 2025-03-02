@@ -8,6 +8,6 @@ filebeat.inputs:
 
 output.logstash:
   hosts: ["logstash:5044"]
-  bulk_max_size: 1
+  bulk_max_size: 1 # just for testing
   pipelining: 0
   timeout: 1s
