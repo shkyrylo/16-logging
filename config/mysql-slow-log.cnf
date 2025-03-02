@@ -1,0 +1,5 @@
+[mysqld]
+slow_query_log = 1
+long_query_time = 1
+slow_query_log_file = /var/log/mysql/mysql-slow.log
+log_output = FILE

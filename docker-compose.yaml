@@ -1,0 +1,87 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-logs:/var/log/mysql
+      - ./config/mysql-slow-log.cnf:/etc/mysql/conf.d/mysql-slow-log.cnf
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.10.2
+    container_name: kibana
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+
+  logstash:
+    build:
+        context: ./logstash
+    container_name: logstash
+    depends_on:
+      - elasticsearch
+      - filebeat
+      - graylog
+    environment:
+      - "XPACK_MONITORING_ENABLED=false"
+      - "PIPELINE_BATCH_SIZE=1"
+      - "PIPELINE_BATCH_DELAY=0"
+    ports:
+      - "5044:5044"
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.10.2
+    container_name: filebeat
+    depends_on:
+      - mysql
+    user: root
+    volumes:
+      - mysql-logs:/var/log/mysql
+      - ./config/filebeat.yml:/usr/share/filebeat/filebeat.yml
+    command: ["--strict.perms=false"]
+
+  graylog:
+    image: graylog/graylog:5.0
+    container_name: graylog
+    depends_on:
+      - mongodb
+      - elasticsearch
+    environment:
+      - GRAYLOG_PASSWORD_SECRET=abcdefghijabcdef
+      - GRAYLOG_ROOT_PASSWORD_SHA2=5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
+      - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
+      - GRAYLOG_MONGODB_URI=mongodb://mongodb:27017/graylog
+    ports:
+      - "9000:9000"
+      - "12201:12201/udp"
+      - "1514:1514"
+
+  mongodb:
+    image: mongo:5.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mysql-logs:
+  mongo-data:
